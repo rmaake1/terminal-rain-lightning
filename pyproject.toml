@@ -30,10 +30,6 @@ classifiers = [
     "Topic :: Terminals",
     "Operating System :: POSIX",
     "Operating System :: MacOS",
-    "Operating System :: Microsoft :: Windows", # If windows-curses handles it well
-]
-dependencies = [
-    'windows-curses; sys_platform == "win32"', # Only for Windows
 ]
 
 [project.urls]
