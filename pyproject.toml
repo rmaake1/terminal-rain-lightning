@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+backend-path = "." # Optional, default is "." - indicates setup.cfg/setup.py is in the same dir if needed
+
+[project]
+name = "terminal-rain-lightning"
+version = "0.1.0" # Start with an initial version
+authors = [
+    { name = "ryan", email = "hello@rmaake.com" }, # UPDATE THIS
+]
+description = "A terminal rain and lightning animation using Python and curses."
+readme = "README.md" # We'll create this next
+license = { file = "LICENSE" }
+requires-python = ">=3.6"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console :: Curses",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Artistic Software",
+    "Topic :: Games/Entertainment :: Simulation",
+    "Topic :: Terminals",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows", # If windows-curses handles it well
+]
+dependencies = [
+    'windows-curses; sys_platform == "win32"', # Only for Windows
+]
+
+[project.urls]
+"Homepage" = "https://github.com/rmaake1/terminal-rain-lightning" # UPDATE THIS
+"Bug Tracker" = "https://github.com/rmaake1/terminal-rain-lightning/issues" # UPDATE THIS
+
+# This section makes your script runnable from the command line after installation
+[project.scripts]
+terminal-rain = "terminal_rain_lightning:main"
