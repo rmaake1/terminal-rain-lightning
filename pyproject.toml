@@ -1,7 +1,7 @@
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
-backend-path = "." # Optional, default is "." - indicates setup.cfg/setup.py is in the same dir if needed
+# backend-path = "." # Optional, default is "." - indicates setup.cfg/setup.py is in the same dir if needed
 
 [project]
 name = "terminal-rain-lightning"
