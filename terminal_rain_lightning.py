@@ -5,6 +5,9 @@ import time
 import random
 import os
 import argparse # Added for command-line arguments
+import subprocess
+import threading
+import signal
 
 UPDATE_INTERVAL = 0.015 # Speed up slightly again w/o clouds/complex bolts
 
@@ -12,6 +15,13 @@ UPDATE_INTERVAL = 0.015 # Speed up slightly again w/o clouds/complex bolts
 RAIN_CHARS = ['|', '.', '`'] # Characters for raindrops
 COLOR_PAIR_RAIN_NORMAL = 1
 COLOR_PAIR_LIGHTNING = 4
+
+# --- Sound Configuration ---
+RAIN_SOUND_PROCESS = None
+THUNDER_SOUND_PROCESS = None
+SOUND_ENABLED = True
+THUNDER_LAST_PLAYED = 0
+THUNDER_COOLDOWN = 2.0  # Minimum seconds between thunder sounds
 
 # Defined curses color names (lowercase) for argument parsing
 CURSES_COLOR_MAP = {
@@ -202,6 +212,56 @@ def setup_colors(rain_color_str='cyan', lightning_color_str='yellow'):
         LIGHTNING_COLOR_ATTR = curses.color_pair(COLOR_PAIR_LIGHTNING) | curses.A_BOLD
         return False
 
+def play_rain_sound():
+    """Start playing the rain sound in a loop."""
+    global RAIN_SOUND_PROCESS, SOUND_ENABLED
+    if SOUND_ENABLED:
+        try:
+            RAIN_SOUND_PROCESS = subprocess.Popen(
+                ["ffplay", "-nodisp", "-loop", "0", "-loglevel", "quiet", "sounds/rain.mp3"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except FileNotFoundError:
+            print("Warning: ffplay not found. Sound disabled.")
+            SOUND_ENABLED = False
+
+def play_thunder_sound():
+    """Play the thunder sound once."""
+    global THUNDER_SOUND_PROCESS, THUNDER_LAST_PLAYED, SOUND_ENABLED
+    if SOUND_ENABLED and (time.time() - THUNDER_LAST_PLAYED) > THUNDER_COOLDOWN:
+        THUNDER_LAST_PLAYED = time.time()
+        try:
+            THUNDER_SOUND_PROCESS = subprocess.Popen(
+                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "sounds/thunder.mp3"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except FileNotFoundError:
+            pass  # Already warned about ffplay in rain sound function
+
+def stop_sounds():
+    """Stop all sound playback."""
+    global RAIN_SOUND_PROCESS, THUNDER_SOUND_PROCESS
+    
+    if RAIN_SOUND_PROCESS:
+        RAIN_SOUND_PROCESS.terminate()
+        RAIN_SOUND_PROCESS = None
+    
+    if THUNDER_SOUND_PROCESS:
+        THUNDER_SOUND_PROCESS.terminate()
+        THUNDER_SOUND_PROCESS = None
+
+def toggle_sound():
+    """Toggle sound on/off."""
+    global SOUND_ENABLED
+    if SOUND_ENABLED:
+        stop_sounds()
+        SOUND_ENABLED = False
+    else:
+        SOUND_ENABLED = True
+        play_rain_sound()
+
 def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
     """Main curses visualization loop for rain simulation."""
     curses.curs_set(0) # Hide cursor
@@ -213,6 +273,10 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
     active_bolts = [] # List of active LightningBolt objects
     rows, cols = stdscr.getmaxyx()
     is_thunderstorm = False
+    
+    # Start rain sound if enabled
+    if SOUND_ENABLED:
+        play_rain_sound()
 
     last_update_time = time.time()
 
@@ -229,6 +293,8 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
         elif key == ord('t') or key == ord('T'):
             is_thunderstorm = not is_thunderstorm
             stdscr.clear()
+        elif key == ord('m') or key == ord('M'):
+            toggle_sound()
 
         # --- Frame Rate Control --- #
         current_time = time.time()
@@ -241,10 +307,16 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
 
         # 1. Lightning Bolts
         next_bolts = []
+        lightning_created = False
         if is_thunderstorm and len(active_bolts) < 3 and random.random() < LIGHTNING_CHANCE:
              start_col = random.randint(cols // 4, 3 * cols // 4)
              start_row = random.randint(0, rows // 5)
              active_bolts.append(LightningBolt(start_row, start_col, rows, cols))
+             lightning_created = True
+             
+             # Play thunder sound for new lightning
+             if lightning_created and SOUND_ENABLED:
+                 play_thunder_sound()
 
         for bolt in active_bolts:
              if bolt.update(): # update now returns True if bolt should *keep* existing
@@ -296,6 +368,9 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
         stdscr.noutrefresh()
         curses.doupdate()
 
+    # Clean up sounds when exiting
+    stop_sounds()
+
 
 def main():
     if not os.isatty(1) or os.environ.get('TERM') == 'dumb':
@@ -319,21 +394,37 @@ def main():
         choices=valid_colors,
         help=f"Color for the lightning. Default: yellow. Choices: {', '.join(valid_colors)}"
     )
+    parser.add_argument(
+        '--no-sound',
+        action='store_true',
+        help="Disable sound effects"
+    )
     args = parser.parse_args()
     # ------------------------ #
+    
+    # Set global sound state from args
+    global SOUND_ENABLED
+    SOUND_ENABLED = not args.no_sound
 
     try:
+        # Set up signal handlers for clean exit
+        signal.signal(signal.SIGINT, lambda sig, frame: stop_sounds())
+        signal.signal(signal.SIGTERM, lambda sig, frame: stop_sounds())
+        
         # Pass parsed colors to the main simulation function
         curses.wrapper(simulate_rain, args.rain_color, args.lightning_color)
     except curses.error as e:
+        stop_sounds()
         try: curses.endwin()
         except Exception: pass
         print(f"\nA curses error occurred: {e}")
         print("Terminal might not fully support curses features (like color/attributes).")
         print("Try resizing the terminal or using a different terminal emulator.")
     except KeyboardInterrupt:
+        stop_sounds()
         print("\nExiting...")
     except Exception as e:
+        stop_sounds()
         try: curses.endwin()
         except Exception: pass
         print(f"\nAn unexpected error occurred: {e}")
