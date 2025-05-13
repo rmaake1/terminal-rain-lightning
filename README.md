@@ -1,6 +1,6 @@
 # Terminal Rain
 
-A Python script that creates a mesmerizing rain and lightning animation directly in your terminal using the `curses` library.
+A Python script that creates a mesmerizing rain and lightning animation directly in your terminal using the `curses` library. Now with sound effects!
 
 ## Calm Rain
 ![Calm Rain](calmrain.gif)
@@ -18,6 +18,7 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 
 *   Smooth ASCII rain effect with varying drop characters.
 *   Toggleable "Thunderstorm" mode for more intense rain and lightning.
+*   Sound effects for rain and thunder (requires ffplay from ffmpeg).
 *   Customizable rain and lightning colors via command-line arguments.
 *   Responsive to terminal resizing (clears and redraws).
 *   Lightweight and runs in most modern terminals.
@@ -26,6 +27,7 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 
 *   Python 3.6+
 *   A terminal that supports `curses` and color attributes (most modern terminals)
+*   ffplay from ffmpeg (for sound effects)
 
 ## Installation
 
@@ -86,6 +88,27 @@ sudo pipx ensurepath --global # optional to allow pipx actions with --global arg
         cd terminal-rain-lightning
         pipx install .
         ```
+
+### Installing FFmpeg
+
+To enjoy the sound effects, you need to have ffplay (part of FFmpeg) installed on your system:
+
+- **Ubuntu/Debian**:
+  ```bash
+  sudo apt update
+  sudo apt install ffmpeg
+  ```
+
+- **Fedora**:
+  ```bash
+  sudo dnf install ffmpeg
+  ```
+
+- **Arch Linux**:
+  ```bash
+  sudo pacman -S ffmpeg
+  ```
+
 ## Usage
 
 Once installed:
@@ -98,6 +121,7 @@ Once installed:
 ### Controls
 
 *   `t` or `T`: Toggle thunderstorm mode on/off.
+*   `m` or `M`: Toggle sound effects on/off.
 *   `q` or `Q` or `Esc`: Quit the animation.
 *   `Ctrl+C`: Also quits the animation.
 *   The animation will adapt if you resize your terminal window.
@@ -113,13 +137,14 @@ terminal-rain [OPTIONS]
 ## Options:
 * --rain-color COLOR: Set the color for the rain. Default: cyan.
 * --lightning-color COLOR: Set the color for the lightning. Default: yellow.
+* --no-sound: Disable sound effects.
 * --help: Show this help message and exit.
 * Available COLOR choices: black, red, green, yellow, blue, magenta, cyan, white.
 
 Example:
 
 ```bash
-terminal-rain --rain-color blue --lightning-color white
+terminal-rain --rain-color blue --lightning-color white --no-sound
 ```
 
 ## Troubleshooting
@@ -129,6 +154,12 @@ terminal-rain --rain-color blue --lightning-color white
 * Ensure your terminal emulator fully supports curses, 256 colors, and attributes like bold/dim. Modern terminals like Alacritty or Kitty generally work well.
 * Check your TERM environment variable (e.g., echo $TERM). Values like xterm-256color are good.
 * The script attempts to use default terminal colors if color changing isn't supported, but full support provides the best experience.
+
+Sound Not Working:
+
+* Make sure ffplay is installed (part of the ffmpeg package).
+* If you don't have ffplay installed, the program will automatically disable sound with a warning message.
+* You can manually disable sound using the --no-sound option or by pressing 'm' while the program is running.
 
 ## License
 
