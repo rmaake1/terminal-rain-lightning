@@ -32,11 +32,6 @@ class Raindrop:
         self.y = y
         self.speed = speed # How many steps to fall per update
         self.char = char
-        # self.state = "falling" # Removed state
-        # self.splash_timer = 0 # Removed timer
-
-# --- Cloud Configuration --- # Removed
-# ...
 
 # --- Lightning ---
 LIGHTNING_COLOR_ATTR = None # Will be set in setup_colors
@@ -45,15 +40,9 @@ LIGHTNING_CHARS = ['*', '+', '#'] # Different intensity characters [dimmest -> b
 LIGHTNING_GROWTH_DELAY = 0.002 # Grow slightly faster
 LIGHTNING_MAX_BRANCHES = 2
 LIGHTNING_BRANCH_CHANCE = 0.3
-# LIGHTNING_FADE_DURATION = 30 # Removed - Bolt removed when all segments expired
-# LIGHTNING_TAIL_FADE_LENGTH = 15 # Removed - Fade based on segment lifespan
 FORK_CHANCE = 0.15 # Chance for a side fork to spawn during growth
 FORK_HORIZONTAL_SPREAD = 3 # Max horizontal distance a fork segment can jump
 SEGMENT_LIFESPAN = 0.8 # Seconds for a segment to fade from # to invisible
-
-
-# class Cloud: # Removed
-#     ...
 
 
 class LightningBolt:
@@ -64,10 +53,8 @@ class LightningBolt:
         self.segments = [(start_row, start_col, time.time())]
         self.last_growth_time = time.time() # Renamed from last_segment_time
         self.is_growing = True
-        # self.fade_timer = LIGHTNING_FADE_DURATION # Removed
         self.max_y = max_y # Store for boundary checks
         self.max_x = max_x # Store for boundary checks
-        # self.age_offset = 0 # Removed
 
     def update(self):
         """Updates bolt growth and checks if it should be removed."""
@@ -91,9 +78,7 @@ class LightningBolt:
                      offset = random.randint(-2, 2)
                      next_x = max(0, min(self.max_x - 1, current_x + offset))
                      # Allow reaching bottom row (max_y - 1)
-                     # next_y = last_y + 1
                      next_y = min(self.max_y - 1, last_y + 1)
-                     # if next_y < self.max_y: # Check was redundant with min()
                      # Add new segment with current time
                      new_segments_this_step.append((next_y, next_x, current_time))
                      if i == 0: next_primary_x = next_x # Store first path pos
@@ -106,9 +91,7 @@ class LightningBolt:
                      if fork_offset == 0: fork_offset = random.choice([-1, 1])
                      fork_x = max(0, min(self.max_x - 1, last_x + fork_offset))
                      # Allow fork reaching bottom row
-                     # fork_y = last_y + 1
                      fork_y = min(self.max_y - 1, last_y + 1)
-                     # if fork_y < self.max_y and fork_x != next_primary_x:
                      if fork_x != next_primary_x:
                           # Add new fork segment with current time
                           new_segments_this_step.append((fork_y, fork_x, current_time))
@@ -202,8 +185,6 @@ def setup_colors(rain_color_str='cyan', lightning_color_str='yellow'):
         # ------------------------------------------------ #
 
         curses.init_pair(COLOR_PAIR_RAIN_NORMAL, rain_fg, bg)
-        # curses.init_pair(COLOR_PAIR_RAIN_SPLASH, curses.COLOR_BLUE, bg) # Removed
-        # curses.init_pair(COLOR_PAIR_CLOUD, curses.COLOR_WHITE, bg) # Removed
         curses.init_pair(COLOR_PAIR_LIGHTNING, lightning_fg, bg)
         LIGHTNING_COLOR_ATTR = curses.color_pair(COLOR_PAIR_LIGHTNING) | curses.A_BOLD
 
@@ -217,8 +198,6 @@ def setup_colors(rain_color_str='cyan', lightning_color_str='yellow'):
         # -------------------------- #
 
         curses.init_pair(COLOR_PAIR_RAIN_NORMAL, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        # curses.init_pair(COLOR_PAIR_RAIN_SPLASH, curses.COLOR_WHITE, curses.COLOR_BLACK) # Removed
-        # curses.init_pair(COLOR_PAIR_CLOUD, curses.COLOR_WHITE, curses.COLOR_BLACK) # Removed
         curses.init_pair(COLOR_PAIR_LIGHTNING, curses.COLOR_WHITE, curses.COLOR_BLACK)
         LIGHTNING_COLOR_ATTR = curses.color_pair(COLOR_PAIR_LIGHTNING) | curses.A_BOLD
         return False
@@ -255,7 +234,6 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
         current_time = time.time()
         delta_time = current_time - last_update_time
         if delta_time < UPDATE_INTERVAL:
-             # Reduce sleep time if many bolts exist? Maybe not necessary yet.
              time.sleep(UPDATE_INTERVAL - delta_time)
         last_update_time = time.time() # Use the time *after* sleep for age calcs
 
@@ -291,8 +269,6 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
         next_raindrops = []
         for drop in raindrops:
             drop.y += drop.speed
-            # Let drop fall off the bottom edge
-            # if drop.y < rows - 1:
             if int(drop.y) < rows:
                 next_raindrops.append(drop)
         raindrops = next_raindrops
@@ -312,9 +288,6 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
                      attr |= curses.A_BOLD
                  elif drop.speed < 0.8:
                      attr |= curses.A_DIM
-                 # Prevent drawing on bottom line
-                 # if int(drop.y) < rows -1:
-                 # Allow drawing on bottom line now
                  if int(drop.y) < rows:
                     stdscr.addstr(int(drop.y), drop.x, drop.char, attr)
              except curses.error:
