@@ -61,6 +61,10 @@ sudo pipx ensurepath --global # optional to allow pipx actions with --global arg
 - Arch:
 
 ```
+yay -S terminal-rain-lightning
+```
+
+```
 sudo pacman -S python-pipx
 pipx ensurepath
 sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
