@@ -86,6 +86,25 @@ sudo pipx ensurepath --global # optional to allow pipx actions with --global arg
         cd terminal-rain-lightning
         pipx install .
         ```
+
+### Using `nix`
+
+1. **Install `nix`** (if you haven't already)
+
+2. **Build `terminal-rain-lightning`:**
+
+    *   **From inside of the cloned project:**
+        ```bash
+        nix-build
+        ```
+
+3. **Run `terminal-rain-lightning`:**
+
+    *   **From a the same directory:**
+        ```bash
+        ./result/bin/terminal-rain
+        ```
+
 ## Usage
 
 Once installed:
