@@ -18,6 +18,7 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 
 *   Smooth ASCII rain effect with varying drop characters.
 *   Toggleable "Thunderstorm" mode for more intense rain and lightning.
+*   Slow-motion mode to observe the rain and lightning in detail.
 *   Customizable rain and lightning colors via command-line arguments.
 *   Responsive to terminal resizing (clears and redraws).
 *   Lightweight and runs in most modern terminals.
@@ -98,6 +99,7 @@ Once installed:
 ### Controls
 
 *   `t` or `T`: Toggle thunderstorm mode on/off.
+*   `s` or `S`: Toggle slow-motion mode on/off.
 *   `q` or `Q` or `Esc`: Quit the animation.
 *   `Ctrl+C`: Also quits the animation.
 *   The animation will adapt if you resize your terminal window.
