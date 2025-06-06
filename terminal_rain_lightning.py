@@ -7,6 +7,7 @@ import os
 import argparse # Added for command-line arguments
 
 UPDATE_INTERVAL = 0.015 # Speed up slightly again w/o clouds/complex bolts
+SLOW_MOTION_INTERVAL = 0.1 # Slower update interval for slow-motion mode
 
 # --- Rain Configuration ---
 RAIN_CHARS = ['|', '.', '`'] # Characters for raindrops
@@ -234,6 +235,7 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
     active_bolts = [] # List of active LightningBolt objects
     rows, cols = stdscr.getmaxyx()
     is_thunderstorm = False
+    is_slow_motion = False
 
     last_update_time = time.time()
 
@@ -250,13 +252,16 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
         elif key == ord('t') or key == ord('T'):
             is_thunderstorm = not is_thunderstorm
             stdscr.clear()
+        elif key == ord('s') or key == ord('S'):
+            is_slow_motion = not is_slow_motion
+            stdscr.clear()
 
         # --- Frame Rate Control --- #
         current_time = time.time()
         delta_time = current_time - last_update_time
-        if delta_time < UPDATE_INTERVAL:
-             # Reduce sleep time if many bolts exist? Maybe not necessary yet.
-             time.sleep(UPDATE_INTERVAL - delta_time)
+        update_interval = SLOW_MOTION_INTERVAL if is_slow_motion else UPDATE_INTERVAL
+        if delta_time < update_interval:
+             time.sleep(update_interval - delta_time)
         last_update_time = time.time() # Use the time *after* sleep for age calcs
 
         # --- Update --- #
