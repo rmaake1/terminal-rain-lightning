@@ -77,15 +77,19 @@ sudo pipx ensurepath --global # optional to allow pipx actions with --global arg
 2. **Install `terminal-rain-lightning`:**
 
 - From GitHub (directly):
-        ```bash
-        pipx install git+https://github.com/rmaake1/terminal-rain-lightning.git
-        ```
+
+```bash
+pipx install git+https://github.com/rmaake1/terminal-rain-lightning.git
+```
+
 - From a local clone:
-        ```bash
-        git clone https://github.com/rmaake1/terminal-rain-lightning.git
-        cd terminal-rain-lightning
-        pipx install .
-        ```
+
+```bash
+git clone https://github.com/rmaake1/terminal-rain-lightning.git
+cd terminal-rain-lightning
+pipx install .
+```
+
 ## Usage
 
 Once installed:
