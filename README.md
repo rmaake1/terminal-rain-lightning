@@ -95,9 +95,10 @@ pipx install .
 Once installed:
 
 *   If you used `pipx` simply type:
-    ```bash
-    terminal-rain
-    ```
+
+```bash
+terminal-rain
+```
 
 ### Controls
 
