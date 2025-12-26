@@ -223,7 +223,7 @@ def setup_colors(rain_color_str='cyan', lightning_color_str='yellow'):
         LIGHTNING_COLOR_ATTR = curses.color_pair(COLOR_PAIR_LIGHTNING) | curses.A_BOLD
         return False
 
-def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
+def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', start_with_thunderstorm=False):
     """Main curses visualization loop for rain simulation."""
     curses.curs_set(0) # Hide cursor
     stdscr.nodelay(True) # Non-blocking input
@@ -233,7 +233,7 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
     raindrops = []
     active_bolts = [] # List of active LightningBolt objects
     rows, cols = stdscr.getmaxyx()
-    is_thunderstorm = False
+    is_thunderstorm = start_with_thunderstorm
 
     last_update_time = time.time()
 
@@ -346,12 +346,17 @@ def main():
         choices=valid_colors,
         help=f"Color for the lightning. Default: yellow. Choices: {', '.join(valid_colors)}"
     )
+    parser.add_argument(
+        '-t', '--thunder',
+        action='store_true',
+        help="Start the program in thunder mode"
+    )
     args = parser.parse_args()
     # ------------------------ #
 
     try:
         # Pass parsed colors to the main simulation function
-        curses.wrapper(simulate_rain, args.rain_color, args.lightning_color)
+        curses.wrapper(simulate_rain, args.rain_color, args.lightning_color, args.thunder)
     except curses.error as e:
         try: curses.endwin()
         except Exception: pass
@@ -368,4 +373,4 @@ def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    main() 
+    main()
