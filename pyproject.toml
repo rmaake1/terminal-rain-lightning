@@ -30,8 +30,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/rmaake1/terminal-rain-lightning" # UPDATE THIS
-"Bug Tracker" = "https://github.com/rmaake1/terminal-rain-lightning/issues" # UPDATE THIS
+"Homepage" = "https://github.com/danieltanfh95/stormtty" # UPDATE THIS
+"Bug Tracker" = "https://github.com/danieltanfh95/stormtty/issues" # UPDATE THIS
 
 # This section makes your script runnable from the command line after installation
 [project.scripts]

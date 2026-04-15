@@ -81,13 +81,13 @@ sudo pipx ensurepath --global # optional to allow pipx actions with --global arg
 - From GitHub (directly):
 
 ```bash
-pipx install git+https://github.com/rmaake1/stormtty.git
+pipx install git+https://github.com/danieltanfh95/stormtty.git
 ```
 
 - From a local clone:
 
 ```bash
-git clone https://github.com/rmaake1/stormtty.git
+git clone https://github.com/danieltanfh95/stormtty.git
 cd stormtty
 pipx install .
 ```
