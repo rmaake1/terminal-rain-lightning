@@ -42,3 +42,7 @@ MANIFEST
 
 # Pytest cache
 .pytest_cache/
+
+# Claude Code tooling
+.succession/
+.plans/
