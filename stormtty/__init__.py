@@ -23,6 +23,8 @@ THUNDER_SOUND_PROCESS = None
 SOUND_ENABLED = True
 THUNDER_LAST_PLAYED = 0
 THUNDER_COOLDOWN = 2.0  # Minimum seconds between thunder sounds
+RAIN_VOLUME = 80      # louder rain by default
+THUNDER_VOLUME = 35   # quieter thunder by default
 
 _RAIN_SOUND = str(_res_files(__package__) / "sounds" / "rain.mp3")
 _THUNDER_SOUND = str(_res_files(__package__) / "sounds" / "thunder.mp3")
@@ -222,7 +224,7 @@ def play_rain_sound():
     if SOUND_ENABLED:
         try:
             RAIN_SOUND_PROCESS = subprocess.Popen(
-                ["ffplay", "-nodisp", "-loop", "0", "-loglevel", "quiet", _RAIN_SOUND],
+                ["ffplay", "-nodisp", "-loop", "0", "-loglevel", "quiet", "-volume", str(RAIN_VOLUME), _RAIN_SOUND],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
@@ -237,7 +239,7 @@ def play_thunder_sound():
         THUNDER_LAST_PLAYED = time.time()
         try:
             THUNDER_SOUND_PROCESS = subprocess.Popen(
-                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", _THUNDER_SOUND],
+                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-volume", str(THUNDER_VOLUME), _THUNDER_SOUND],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
@@ -387,28 +389,44 @@ def main():
     parser.add_argument(
         '--rain-color',
         type=str,
-        default='cyan',
+        default='blue',
         choices=valid_colors,
-        help=f"Color for the rain. Default: cyan. Choices: {', '.join(valid_colors)}"
+        help=f"Color for the rain. Default: blue. Choices: {', '.join(valid_colors)}"
     )
     parser.add_argument(
         '--lightning-color',
         type=str,
-        default='yellow',
+        default='white',
         choices=valid_colors,
-        help=f"Color for the lightning. Default: yellow. Choices: {', '.join(valid_colors)}"
+        help=f"Color for the lightning. Default: white. Choices: {', '.join(valid_colors)}"
     )
     parser.add_argument(
         '--no-sound',
         action='store_true',
         help="Disable sound effects"
     )
+    parser.add_argument(
+        '--rain-volume',
+        type=int,
+        default=80,
+        metavar='0-100',
+        help="Volume for rain sound (0-100). Default: 80"
+    )
+    parser.add_argument(
+        '--thunder-volume',
+        type=int,
+        default=35,
+        metavar='0-100',
+        help="Volume for thunder sound (0-100). Default: 35"
+    )
     args = parser.parse_args()
     # ------------------------ #
-    
+
     # Set global sound state from args
-    global SOUND_ENABLED
+    global SOUND_ENABLED, RAIN_VOLUME, THUNDER_VOLUME
     SOUND_ENABLED = not args.no_sound
+    RAIN_VOLUME = max(0, min(100, args.rain_volume))
+    THUNDER_VOLUME = max(0, min(100, args.thunder_volume))
 
     try:
         # Set up signal handlers for clean exit
