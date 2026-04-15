@@ -1,0 +1,68 @@
+;; .succession/config.edn — Succession identity-cycle config
+;;
+;; Every tunable in the system lives here. Values are deep-merged
+;; over the defaults in `succession.config/default-config`
+;; so you only need to override the ones you disagree with.
+;;
+;; Reference: `.plans/succession-identity-cycle.md` §Config.
+
+{:succession/config-version 1
+
+ ;; --- Weight formula ---
+ ;; freq = min(sqrt(distinct-sessions), freq-cap)
+ ;; span = (1 + log(1+span_days))^span-exponent
+ ;; gap  = 1 + gap-crossings
+ ;; decay = 0.5 ^ (days_since_last / half-life)
+ :weight/freq-cap                4.0
+ :weight/span-exponent           1.5
+ :weight/within-session-penalty  0.5
+ :weight/decay-half-life-days    180
+ :weight/violation-penalty-rate  0.5
+ :weight/gap-threshold-sessions  1
+
+ ;; --- Tier rules with hysteresis ---
+ ;; enter: ALL conditions must hold; exit: ANY condition triggers.
+ :tier/rules
+ {:principle {:enter {:min-weight 30.0 :max-violation-rate 0.0 :min-gap-crossings 5}
+              :exit  {:max-weight 20.0 :min-violation-rate 0.1}}
+  :rule      {:enter {:min-weight 5.0  :max-violation-rate 0.3 :min-gap-crossings 1}
+              :exit  {:max-weight 3.0  :min-violation-rate 0.5}}
+  :ethic     {:enter {}                 ; default landing
+              :exit  {:archive-below-weight 0.5}}}
+
+ ;; --- Salience (PreToolUse / PostToolUse refresh ranking) ---
+ :salience/profile
+ {:feature-weights {:tier-weight 3.0 :tag-match 2.0 :fingerprint 4.0
+                    :recency 0.5 :weight 1.0}
+  :top-k    12}
+
+ ;; --- Refresh gate (pacing filters, not budgets — see infinite-context principle) ---
+ :refresh/gate
+ {:integration-gap-turns 2
+  :byte-threshold        200
+  :cold-start-skip-turns 1}
+
+ ;; --- Consult advisory reminder ---
+ :consult/advisory
+ {:every-n-turns              8
+  :on-contradiction-adjacency true}
+
+ ;; --- LLM models (deepseek primary, Sonnet fallback/escalation) ---
+ :judge/llm     {:model "deepseek/deepseek-chat"
+                 :fallback-model "claude-sonnet-4-6"
+                 :timeout-seconds 30}
+ :reconcile/llm {:model "claude-sonnet-4-6" :timeout-seconds 60
+                 :auto-apply-confidence 0.8}
+ :consult/llm   {:model "claude-sonnet-4-6" :timeout-seconds 60}
+
+ ;; --- Escalation thresholds ---
+ :escalation/sustained-violation {:min-rate 0.1 :min-sessions 3}
+ :escalation/drift-alarm         {:contradictions-per-n-tool-calls 3
+                                  :n-tool-calls 20}
+
+ ;; --- Whitepaper §3.3.3 knowledge categories ---
+ :card/categories [:strategy :failure-inheritance :relational-calibration :meta-cognition]
+
+ ;; --- Auto-install starter cards on first session ---
+ ;; Set to false to skip seeding the identity store on first auto-init.
+ :auto-install/starter-pack true}

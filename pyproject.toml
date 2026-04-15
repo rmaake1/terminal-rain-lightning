@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 # backend-path = "." # Optional, default is "." - indicates setup.cfg/setup.py is in the same dir if needed
 
 [project]
-name = "terminal-rain-lightning"
+name = "stormtty"
 version = "0.1.0" # Start with an initial version
 authors = [
     { name = "ryan", email = "hello@rmaake.com" }, # UPDATE THIS
@@ -35,10 +35,10 @@ classifiers = [
 
 # This section makes your script runnable from the command line after installation
 [project.scripts]
-terminal-rain = "terminal_rain_lightning:main"
+stormtty = "stormtty:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
 
 [tool.setuptools.package-data]
-terminal_rain_lightning = ["sounds/*.mp3"]
+stormtty = ["sounds/*.mp3"]

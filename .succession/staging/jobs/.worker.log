@@ -1,0 +1,12 @@
+2026-04-15T14:12:22Z [INFO ] worker/start parallelism=2
+2026-04-15T14:12:22Z [INFO ] scanner/claimed job=20260415T141222812Z-54f70c1a-dbc6-49f9-ade1-93fb82403984.json type=judge
+2026-04-15T14:12:27Z [INFO ] scanner/claimed job=20260415T141227214Z-56f31b2d-8218-442f-b1e1-74fe15fcfb22.json type=llm-reconcile
+2026-04-15T14:12:28Z [INFO ] job/complete job=20260415T141222812Z-54f70c1a-dbc6-49f9-ade1-93fb82403984.json duration=5601ms
+2026-04-15T14:12:49Z [INFO ] scanner/claimed job=20260415T141249443Z-10fb2b5e-66d9-4ac8-891c-f9386606d8a2.json type=llm-reconcile
+2026-04-15T14:12:54Z [INFO ] job/complete job=20260415T141227214Z-56f31b2d-8218-442f-b1e1-74fe15fcfb22.json duration=26934ms
+2026-04-15T14:12:54Z [INFO ] scanner/claimed job=20260415T141254329Z-c6185c33-60fb-407d-a45c-8cab0ab984b4.json type=llm-reconcile
+2026-04-15T14:13:01Z [INFO ] scanner/claimed job=20260415T141301176Z-dab0f2a0-ee7e-4ab7-a065-4eb6f123659d.json type=judge
+2026-04-15T14:13:02Z [INFO ] scanner/claimed job=20260415T141302563Z-ae58ba45-609b-4935-b998-4f9020f38291.json type=llm-reconcile
+2026-04-15T14:13:04Z [INFO ] scanner/claimed job=20260415T141304318Z-910d2390-de66-4f84-8f3a-e96e2c0ef65c.json type=judge
+2026-04-15T14:13:08Z [INFO ] scanner/claimed job=20260415T141307776Z-e498e3c8-5c4b-4b99-baad-3f8205ff7d9a.json type=judge
+2026-04-15T14:13:10Z [INFO ] scanner/claimed job=20260415T141310640Z-d81bfd6d-7292-4feb-904b-6de0e28249ca.json type=judge

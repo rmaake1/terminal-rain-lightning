@@ -1,0 +1,1 @@
+{:succession/entity-type :delta, :delta/id "d-reconcile-c-tier-verify-via-repl", :delta/at #inst "2026-04-15T14:02:27.353-00:00", :delta/kind :mark-contradiction, :delta/source :reconcile, :delta/card-id "verify-via-repl", :delta/payload #:contradiction{:id "c-tier-verify-via-repl", :category :tier-violation}}

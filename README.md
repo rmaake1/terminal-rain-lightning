@@ -1,6 +1,6 @@
-# Terminal Rain
+# stormtty
 
-A Python script that creates a mesmerizing rain and lightning animation directly in your terminal using the `curses` library. Now with sound effects!
+A rain and lightning animation for your terminal, built with Python's `curses` library. Includes sound effects.
 
 ## Calm Rain
 ![Calm Rain](calmrain.gif)
@@ -25,13 +25,13 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 
 ## Requirements
 
-*   Python 3.6+
+*   Python 3.9+
 *   A terminal that supports `curses` and color attributes (most modern terminals)
 *   ffplay from ffmpeg (for sound effects)
 
 ## Installation
 
-The recommended way to install `terminal-rain-lightning` is using `pipx`. This will make the `terminal-rain` command available globally while keeping its dependencies isolated.
+The recommended way to install `stormtty` is using `pipx`. This will make the `stormtty` command available globally while keeping its dependencies isolated.
 
 ### Using `pipx` (Recommended)
 
@@ -76,19 +76,19 @@ python3 -m pipx ensurepath
 sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
 ```
 
-2. **Install `terminal-rain-lightning`:**
+2. **Install `stormtty`:**
 
 - From GitHub (directly):
 
 ```bash
-pipx install git+https://github.com/rmaake1/terminal-rain-lightning.git
+pipx install git+https://github.com/rmaake1/stormtty.git
 ```
 
 - From a local clone:
 
 ```bash
-git clone https://github.com/rmaake1/terminal-rain-lightning.git
-cd terminal-rain-lightning
+git clone https://github.com/rmaake1/stormtty.git
+cd stormtty
 pipx install .
 ```
 
@@ -122,7 +122,7 @@ Once installed:
 *   If you used `pipx` simply type:
 
 ```bash
-terminal-rain
+stormtty
 ```
 
 ### Controls
@@ -138,7 +138,7 @@ terminal-rain
 Customize the appearance of the animation:
 
 ```bash
-terminal-rain [OPTIONS]
+stormtty [OPTIONS]
 ```
 
 ## Options:
@@ -151,7 +151,7 @@ terminal-rain [OPTIONS]
 Example:
 
 ```bash
-terminal-rain --rain-color blue --lightning-color white --no-sound
+stormtty --rain-color blue --lightning-color white --no-sound
 ```
 
 ## Troubleshooting
