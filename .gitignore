@@ -46,3 +46,4 @@ MANIFEST
 # Claude Code tooling
 .succession/
 .plans/
+.claude/
