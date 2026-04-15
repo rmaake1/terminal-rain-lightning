@@ -22,9 +22,16 @@ RAIN_SOUND_PROCESS = None
 THUNDER_SOUND_PROCESS = None
 SOUND_ENABLED = True
 THUNDER_LAST_PLAYED = 0
-THUNDER_COOLDOWN = 2.0  # Minimum seconds between thunder sounds
+THUNDER_COOLDOWN_MIN = 4.0
+THUNDER_COOLDOWN_MAX = 10.0
+THUNDER_COOLDOWN = 6.0  # Randomized each strike; initial value
 RAIN_VOLUME = 80      # louder rain by default
 THUNDER_VOLUME = 35   # quieter thunder by default
+THUNDER_VOLUME_VAR_MIN = 0.85
+THUNDER_VOLUME_VAR_MAX = 1.15
+THUNDER_PITCH_MIN = 0.8
+THUNDER_PITCH_MAX = 1.2
+BASE_SAMPLE_RATE = 44100
 
 _RAIN_SOUND = str(_res_files(__package__) / "sounds" / "rain.mp3")
 _THUNDER_SOUND = str(_res_files(__package__) / "sounds" / "thunder.mp3")
@@ -232,14 +239,19 @@ def play_rain_sound():
             print("Warning: ffplay not found. Sound disabled.")
             SOUND_ENABLED = False
 
-def play_thunder_sound():
-    """Play the thunder sound once."""
-    global THUNDER_SOUND_PROCESS, THUNDER_LAST_PLAYED, SOUND_ENABLED
+def play_thunder_sound(bolt_size_ratio=1.0):
+    """Play the thunder sound once, with pitch and volume based on bolt size."""
+    global THUNDER_SOUND_PROCESS, THUNDER_LAST_PLAYED, THUNDER_COOLDOWN, SOUND_ENABLED
     if SOUND_ENABLED and (time.time() - THUNDER_LAST_PLAYED) > THUNDER_COOLDOWN:
         THUNDER_LAST_PLAYED = time.time()
+        THUNDER_COOLDOWN = random.uniform(THUNDER_COOLDOWN_MIN, THUNDER_COOLDOWN_MAX)
+        vol = int(THUNDER_VOLUME * bolt_size_ratio * random.uniform(THUNDER_VOLUME_VAR_MIN, THUNDER_VOLUME_VAR_MAX))
+        vol = max(0, min(100, vol))
+        rate = int(BASE_SAMPLE_RATE * random.uniform(THUNDER_PITCH_MIN, THUNDER_PITCH_MAX))
         try:
             THUNDER_SOUND_PROCESS = subprocess.Popen(
-                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-volume", str(THUNDER_VOLUME), _THUNDER_SOUND],
+                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet",
+                 "-af", f"asetrate={rate}", "-volume", str(vol), _THUNDER_SOUND],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
@@ -268,7 +280,7 @@ def toggle_sound():
         SOUND_ENABLED = True
         play_rain_sound()
 
-def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
+def simulate_rain(stdscr, rain_color_str='blue', lightning_color_str='white'):
     """Main curses visualization loop for rain simulation."""
     curses.curs_set(0) # Hide cursor
     stdscr.nodelay(True) # Non-blocking input
@@ -317,12 +329,15 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
         if is_thunderstorm and len(active_bolts) < 3 and random.random() < LIGHTNING_CHANCE:
              start_col = random.randint(cols // 4, 3 * cols // 4)
              start_row = random.randint(0, rows // 5)
-             active_bolts.append(LightningBolt(start_row, start_col, rows, cols))
+             bolt = LightningBolt(start_row, start_col, rows, cols)
+             active_bolts.append(bolt)
              lightning_created = True
-             
+
              # Play thunder sound for new lightning
              if lightning_created and SOUND_ENABLED:
-                 play_thunder_sound()
+                 max_possible = rows - 2
+                 ratio = bolt.target_length / max_possible if max_possible > 0 else 1.0
+                 play_thunder_sound(ratio)
 
         for bolt in active_bolts:
              if bolt.update(): # update now returns True if bolt should *keep* existing
@@ -361,11 +376,7 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
         # 2. Raindrops
         for drop in raindrops:
              try:
-                 attr = curses.color_pair(COLOR_PAIR_RAIN_NORMAL)
-                 if is_thunderstorm:
-                     attr |= curses.A_BOLD
-                 elif drop.speed < 0.8:
-                     attr |= curses.A_DIM
+                 attr = curses.color_pair(COLOR_PAIR_RAIN_NORMAL) | curses.A_BOLD
                  if int(drop.y) < rows:
                     stdscr.addstr(int(drop.y), drop.x, drop.char, attr)
              except curses.error:
@@ -419,14 +430,45 @@ def main():
         metavar='0-100',
         help="Volume for thunder sound (0-100). Default: 35"
     )
+    parser.add_argument(
+        '--thunder-cooldown',
+        type=float,
+        nargs=2,
+        default=[4.0, 10.0],
+        metavar=('MIN', 'MAX'),
+        help="Cooldown range (seconds) between thunder strikes. Default: 4.0 10.0"
+    )
+    parser.add_argument(
+        '--thunder-pitch',
+        type=float,
+        nargs=2,
+        default=[0.8, 1.2],
+        metavar=('MIN', 'MAX'),
+        help="Pitch multiplier range (1.0 = normal). Default: 0.8 1.2"
+    )
+    parser.add_argument(
+        '--thunder-volume-variance',
+        type=float,
+        nargs=2,
+        default=[0.85, 1.15],
+        metavar=('MIN', 'MAX'),
+        help="Volume variance multiplier range. Default: 0.85 1.15"
+    )
     args = parser.parse_args()
     # ------------------------ #
 
     # Set global sound state from args
-    global SOUND_ENABLED, RAIN_VOLUME, THUNDER_VOLUME
+    global SOUND_ENABLED, RAIN_VOLUME, THUNDER_VOLUME, \
+           THUNDER_COOLDOWN_MIN, THUNDER_COOLDOWN_MAX, THUNDER_COOLDOWN, \
+           THUNDER_PITCH_MIN, THUNDER_PITCH_MAX, \
+           THUNDER_VOLUME_VAR_MIN, THUNDER_VOLUME_VAR_MAX
     SOUND_ENABLED = not args.no_sound
     RAIN_VOLUME = max(0, min(100, args.rain_volume))
     THUNDER_VOLUME = max(0, min(100, args.thunder_volume))
+    THUNDER_COOLDOWN_MIN, THUNDER_COOLDOWN_MAX = args.thunder_cooldown
+    THUNDER_COOLDOWN = random.uniform(THUNDER_COOLDOWN_MIN, THUNDER_COOLDOWN_MAX)
+    THUNDER_PITCH_MIN, THUNDER_PITCH_MAX = args.thunder_pitch
+    THUNDER_VOLUME_VAR_MIN, THUNDER_VOLUME_VAR_MAX = args.thunder_volume_variance
 
     try:
         # Set up signal handlers for clean exit
