@@ -8,6 +8,7 @@ import argparse # Added for command-line arguments
 import subprocess
 import threading
 import signal
+from importlib.resources import files as _res_files
 
 UPDATE_INTERVAL = 0.015 # Speed up slightly again w/o clouds/complex bolts
 
@@ -22,6 +23,9 @@ THUNDER_SOUND_PROCESS = None
 SOUND_ENABLED = True
 THUNDER_LAST_PLAYED = 0
 THUNDER_COOLDOWN = 2.0  # Minimum seconds between thunder sounds
+
+_RAIN_SOUND = str(_res_files(__package__) / "sounds" / "rain.mp3")
+_THUNDER_SOUND = str(_res_files(__package__) / "sounds" / "thunder.mp3")
 
 # Defined curses color names (lowercase) for argument parsing
 CURSES_COLOR_MAP = {
@@ -218,7 +222,7 @@ def play_rain_sound():
     if SOUND_ENABLED:
         try:
             RAIN_SOUND_PROCESS = subprocess.Popen(
-                ["ffplay", "-nodisp", "-loop", "0", "-loglevel", "quiet", "sounds/rain.mp3"],
+                ["ffplay", "-nodisp", "-loop", "0", "-loglevel", "quiet", _RAIN_SOUND],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
@@ -233,7 +237,7 @@ def play_thunder_sound():
         THUNDER_LAST_PLAYED = time.time()
         try:
             THUNDER_SOUND_PROCESS = subprocess.Popen(
-                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "sounds/thunder.mp3"],
+                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", _THUNDER_SOUND],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
