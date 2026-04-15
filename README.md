@@ -18,7 +18,7 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 
 *   Smooth ASCII rain effect with varying drop characters.
 *   Toggleable "Thunderstorm" mode for more intense rain and lightning.
-*   Sound effects for rain and thunder (requires ffplay from ffmpeg).
+*   Sound effects for rain and thunder with configurable volume and pitch (requires ffplay from ffmpeg).
 *   Customizable rain and lightning colors via command-line arguments.
 *   Responsive to terminal resizing (clears and redraws).
 *   Lightweight and runs in most modern terminals.
@@ -142,16 +142,25 @@ stormtty [OPTIONS]
 ```
 
 ## Options:
-* --rain-color COLOR: Set the color for the rain. Default: cyan.
-* --lightning-color COLOR: Set the color for the lightning. Default: yellow.
-* --no-sound: Disable sound effects.
-* --help: Show this help message and exit.
-* Available COLOR choices: black, red, green, yellow, blue, magenta, cyan, white.
+
+| Option | Description |
+|---|---|
+| `--rain-color COLOR` | Set the color for the rain. Default: `blue`. |
+| `--lightning-color COLOR` | Set the color for the lightning. Default: `white`. |
+| `--no-sound` | Disable sound effects. |
+| `--rain-volume 0-100` | Volume for rain sound. Default: `80`. |
+| `--thunder-volume 0-100` | Volume for thunder sound. Default: `35`. |
+| `--thunder-cooldown MIN MAX` | Cooldown range (s) between thunder. Default: `4.0 10.0`. |
+| `--thunder-pitch MIN MAX` | Pitch multiplier range. Default: `0.8 1.2`. |
+| `--thunder-volume-variance MIN MAX` | Volume variance multiplier. Default: `0.85 1.15`. |
+| `--help` | Show this help message and exit. |
+
+Available COLOR choices: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`.
 
 Example:
 
 ```bash
-stormtty --rain-color blue --lightning-color white --no-sound
+stormtty --rain-color cyan --thunder-volume 60 --thunder-pitch 0.6 1.0
 ```
 
 ## Troubleshooting

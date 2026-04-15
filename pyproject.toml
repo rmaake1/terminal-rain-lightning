@@ -7,10 +7,10 @@ build-backend = "setuptools.build_meta"
 name = "stormtty"
 version = "0.1.0" # Start with an initial version
 authors = [
-    { name = "ryan", email = "hello@rmaake.com" }, # UPDATE THIS
+    { name = "danieltanfh95", email = "danieltanfh95@gmail.com" },
 ]
 description = "A terminal rain and lightning animation using Python and curses."
-readme = "README.md" # We'll create this next
+readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.9"
 classifiers = [
@@ -30,8 +30,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/danieltanfh95/stormtty" # UPDATE THIS
-"Bug Tracker" = "https://github.com/danieltanfh95/stormtty/issues" # UPDATE THIS
+"Homepage" = "https://github.com/danieltanfh95/stormtty"
+"Bug Tracker" = "https://github.com/danieltanfh95/stormtty/issues"
 
 # This section makes your script runnable from the command line after installation
 [project.scripts]
