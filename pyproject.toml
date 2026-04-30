@@ -39,3 +39,12 @@ classifiers = [
 # This section makes your script runnable from the command line after installation
 [project.scripts]
 terminal-rain = "terminal_rain_lightning:main"
+
+[tool.setuptools]
+py-modules = ["terminal_rain_lightning"]
+
+[tool.setuptools.packages.find]
+include = ["terminal_rain_lightning_assets*"]
+
+[tool.setuptools.package-data]
+terminal_rain_lightning_assets = ["sounds/*.wav", "sounds/*.md"]

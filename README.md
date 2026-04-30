@@ -20,6 +20,7 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 *   Toggleable "Thunderstorm" mode for more intense rain and lightning.
 *   Optional startup flag for launching directly into thunderstorm mode.
 *   Slow-motion mode to observe the rain and lightning in detail.
+*   Optional rain and thunder sounds.
 *   Customizable rain and lightning colors via command-line arguments.
 *   Responsive to terminal resizing (clears and redraws).
 *   Lightweight and runs in most modern terminals.
@@ -28,67 +29,60 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 
 *   Python 3.6+
 *   A terminal that supports `curses` and color attributes (most modern terminals)
+*   Optional: `ffplay` from FFmpeg for sound playback
 
 ## Installation
 
-The recommended way to install `terminal-rain-lightning` is using `pipx`. This will make the `terminal-rain` command available globally while keeping its dependencies isolated.
-
-### Using `pipx` (Recommended)
+### Using `pipx`
 
 `pipx` installs Python command-line applications into isolated environments and makes them globally available without polluting your global Python installation or requiring manual virtual environment activation to run.
 
-1. **Install `pipx`** (if you haven't already):
+Install `pipx` first if you do not already have it:
 
 The best way to install `pipx` on Linux is through your distribution's package manager, if available. This ensures proper system integration and updates.
 
 Common distro installs pulled from the [pipx repo](https://github.com/pypa/pipx):
 
-- Ubuntu 23.04 or above
+Ubuntu 23.04 or above:
 
-```
+```bash
 sudo apt update
 sudo apt install pipx
 pipx ensurepath
 sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
 ```
 
-- Fedora:
+Fedora:
 
-```
+```bash
 sudo dnf install pipx
 pipx ensurepath
 sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
 ```
 
-- Arch:
+Arch:
 
-```
-yay -S terminal-rain-lightning
-```
-
-```
+```bash
 sudo pacman -S python-pipx
 pipx ensurepath
 sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
 ```
 
-- Using `pip` on other distributions:
+Using `pip` on other distributions:
 
-```
+```bash
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
 ```
 
-2. **Install `terminal-rain-lightning`:**
-
-- From GitHub (directly):
+Then install `terminal-rain-lightning` from GitHub:
 
 ```bash
 pipx install git+https://github.com/rmaake1/terminal-rain-lightning.git
 ```
 
-- From a local clone:
+Or install it from a local clone:
 
 ```bash
 git clone https://github.com/rmaake1/terminal-rain-lightning.git
@@ -96,7 +90,15 @@ cd terminal-rain-lightning
 pipx install .
 ```
 
-### Using `nix`
+### Using the Arch AUR
+
+On Arch-based systems with an AUR helper:
+
+```bash
+yay -S terminal-rain-lightning
+```
+
+### Using Nix
 
 From inside a local clone:
 
@@ -109,8 +111,6 @@ nix-build
 
 Once installed:
 
-*   If you used `pipx` simply type:
-
 ```bash
 terminal-rain
 ```
@@ -119,38 +119,47 @@ terminal-rain
 
 *   `t` or `T`: Toggle thunderstorm mode on/off.
 *   `s` or `S`: Toggle slow-motion mode on/off.
+*   `m` or `M`: Toggle sound on/off.
 *   `q` or `Q` or `Esc`: Quit the animation.
 *   `Ctrl+C`: Also quits the animation.
 *   The animation will adapt if you resize your terminal window.
 
 ### Command-line Options
 
-Customize the appearance of the animation:
-
 ```bash
 terminal-rain [OPTIONS]
 ```
 
-## Options:
-* --rain-color COLOR: Set the color for the rain. Default: cyan.
-* --lightning-color COLOR: Set the color for the lightning. Default: yellow.
-* -t, --thunder: Start in thunderstorm mode.
-* --help: Show this help message and exit.
-* Available COLOR choices: black, red, green, yellow, blue, magenta, cyan, white.
+*   `--rain-color COLOR`: Set the color for the rain. Default: `cyan`.
+*   `--lightning-color COLOR`: Set the color for the lightning. Default: `yellow`.
+*   `-t`, `--thunder`: Start in thunderstorm mode.
+*   `--sound`: Enable rain and thunder sounds. Requires `ffplay` from FFmpeg.
+*   `--help`: Show help text and exit.
 
-Example:
+Available color choices: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`.
+
+Examples:
 
 ```bash
 terminal-rain --rain-color blue --lightning-color white
 ```
 
+```bash
+terminal-rain --thunder --sound
+```
+
 ## Troubleshooting
 
-"curses.error: ..." / Garbled Output / Colors Not Working:
+### `curses.error`, Garbled Output, or Colors Not Working
 
 * Ensure your terminal emulator fully supports curses, 256 colors, and attributes like bold/dim. Modern terminals like Alacritty or Kitty generally work well.
-* Check your TERM environment variable (e.g., echo $TERM). Values like xterm-256color are good.
+* Check your `TERM` environment variable. Values like `xterm-256color` are good.
 * The script attempts to use default terminal colors if color changing isn't supported, but full support provides the best experience.
+
+### Sound Not Working
+
+* Install FFmpeg so `ffplay` is available on your PATH.
+* Sound is opt-in. Start with `terminal-rain --sound` or press `m` while the animation is running.
 
 ## License
 
