@@ -7,10 +7,10 @@ build-backend = "setuptools.build_meta"
 name = "terminal-rain-lightning"
 version = "0.1.0" # Start with an initial version
 authors = [
-    { name = "ryan", email = "hello@rmaake.com" }, # UPDATE THIS
+    { name = "ryan", email = "hello@rmaake.com" },
 ]
 description = "A terminal rain and lightning animation using Python and curses."
-readme = "README.md" # We'll create this next
+readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.6"
 classifiers = [
@@ -33,8 +33,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/rmaake1/terminal-rain-lightning" # UPDATE THIS
-"Bug Tracker" = "https://github.com/rmaake1/terminal-rain-lightning/issues" # UPDATE THIS
+"Homepage" = "https://github.com/rmaake1/terminal-rain-lightning"
+"Bug Tracker" = "https://github.com/rmaake1/terminal-rain-lightning/issues"
 
 # This section makes your script runnable from the command line after installation
 [project.scripts]
@@ -47,4 +47,4 @@ py-modules = ["terminal_rain_lightning"]
 include = ["terminal_rain_lightning_assets*"]
 
 [tool.setuptools.package-data]
-terminal_rain_lightning_assets = ["sounds/*.wav", "sounds/*.md"]
+terminal_rain_lightning_assets = ["sounds/*.mp3", "sounds/*.md"]

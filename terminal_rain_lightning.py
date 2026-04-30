@@ -11,8 +11,21 @@ import shutil
 import subprocess
 import tempfile
 
-UPDATE_INTERVAL = 0.015 # Speed up slightly again w/o clouds/complex bolts
-SLOW_MOTION_INTERVAL = 0.1 # Slower update interval for slow-motion mode
+UPDATE_INTERVAL = 0.015 # Fast update interval
+MEDIUM_MOTION_INTERVAL = 0.045 # Middle update interval
+SLOW_MOTION_INTERVAL = 0.1 # Slower update interval
+SPEED_MODES = [
+    ('fast', UPDATE_INTERVAL),
+    ('medium', MEDIUM_MOTION_INTERVAL),
+    ('slow', SLOW_MOTION_INTERVAL),
+]
+SPEED_MODE_NAMES = [name for name, _ in SPEED_MODES]
+VOLUME_PRESETS = {
+    'quiet': {'rain': 50, 'thunder': 50},
+    'normal': {'rain': 80, 'thunder': 70},
+    'loud': {'rain': 100, 'thunder': 90},
+}
+VOLUME_PRESET_NAMES = ['quiet', 'normal', 'loud']
 
 # --- Rain Configuration ---
 RAIN_CHARS = ['|', '.', '`'] # Characters for raindrops
@@ -56,19 +69,34 @@ LIGHTNING_BRANCH_CHANCE = 0.3
 FORK_CHANCE = 0.15 # Chance for a side fork to spawn during growth
 FORK_HORIZONTAL_SPREAD = 3 # Max horizontal distance a fork segment can jump
 SEGMENT_LIFESPAN = 0.8 # Seconds for a segment to fade from # to invisible
+THUNDER_DELAY_RANGE = (0.35, 1.15)
+THUNDER_SOUND_FILES = [
+    'thunder.mp3',
+    'thunder-deep.mp3',
+    'thunder-bright.mp3',
+    'thunder-distant.mp3',
+    'thunder-roll.mp3',
+    'thunder-low-roll.mp3',
+    'thunder-sharp.mp3',
+    'thunder-far.mp3',
+    'thunder-short.mp3',
+]
 
 
 class SoundManager:
-    def __init__(self, enabled=False):
+    def __init__(self, enabled=False, volume_preset='normal'):
         self.enabled = enabled
         self.available = shutil.which('ffplay') is not None
+        self.volume_preset = volume_preset if volume_preset in VOLUME_PRESETS else 'normal'
         self.temp_dir = None
-        self.rain_sound = None
-        self.thunder_sound = None
+        self.sound_paths = {}
         self.rain_process = None
-        self.thunder_process = None
+        self.thunder_processes = []
+        self.recent_thunder_sounds = []
+        self.pending_thunder_time = None
         self.last_thunder_time = 0
-        self.thunder_cooldown = 2.0
+        self.thunder_cooldown = 1.1
+        self.max_thunder_processes = 2
 
     def start(self):
         if self.enabled:
@@ -81,10 +109,24 @@ class SoundManager:
         else:
             self.stop()
 
+    def cycle_volume(self):
+        current_index = VOLUME_PRESET_NAMES.index(self.volume_preset)
+        self.volume_preset = VOLUME_PRESET_NAMES[(current_index + 1) % len(VOLUME_PRESET_NAMES)]
+        if self.rain_process:
+            self._terminate(self.rain_process)
+            self.rain_process = None
+            self.start_rain()
+
+    def update(self):
+        if self.pending_thunder_time is not None and time.time() >= self.pending_thunder_time:
+            self.pending_thunder_time = None
+            self.play_thunder()
+        self._cleanup_finished_thunder()
+
     def start_rain(self):
         if not self.enabled or not self.available or self.rain_process:
             return
-        rain_sound = self._sound_path('rain.wav')
+        rain_sound = self._sound_path('rain.mp3')
         if not rain_sound:
             return
         self.rain_process = self._spawn([
@@ -92,9 +134,17 @@ class SoundManager:
             '-nodisp',
             '-loop', '0',
             '-loglevel', 'quiet',
-            '-volume', '35',
+            '-volume', str(self._volume('rain')),
             rain_sound,
         ])
+
+    def schedule_thunder(self):
+        if not self.enabled or not self.available or self.pending_thunder_time is not None:
+            return
+        now = time.time()
+        if now - self.last_thunder_time < self.thunder_cooldown:
+            return
+        self.pending_thunder_time = now + random.uniform(*THUNDER_DELAY_RANGE)
 
     def play_thunder(self):
         if not self.enabled or not self.available:
@@ -104,25 +154,32 @@ class SoundManager:
             return
         self.last_thunder_time = now
         self._cleanup_finished_thunder()
-        if self.thunder_process:
+        if len(self.thunder_processes) >= self.max_thunder_processes:
             return
-        thunder_sound = self._sound_path('thunder.wav')
+        thunder_filename = self._choose_thunder_sound()
+        thunder_sound = self._sound_path(thunder_filename)
         if not thunder_sound:
             return
-        self.thunder_process = self._spawn([
+        thunder_process = self._spawn([
             'ffplay',
             '-nodisp',
             '-autoexit',
             '-loglevel', 'quiet',
-            '-volume', '70',
+            '-volume', str(self._volume('thunder')),
             thunder_sound,
         ])
+        if thunder_process:
+            self.thunder_processes.append(thunder_process)
+            self.recent_thunder_sounds.append(thunder_filename)
+            self.recent_thunder_sounds = self.recent_thunder_sounds[-2:]
 
     def stop(self):
+        self.pending_thunder_time = None
         self._terminate(self.rain_process)
-        self._terminate(self.thunder_process)
+        for thunder_process in self.thunder_processes:
+            self._terminate(thunder_process)
         self.rain_process = None
-        self.thunder_process = None
+        self.thunder_processes = []
 
     def close(self):
         self.stop()
@@ -143,10 +200,8 @@ class SoundManager:
             return None
 
     def _sound_path(self, filename):
-        if filename == 'rain.wav' and self.rain_sound:
-            return self.rain_sound
-        if filename == 'thunder.wav' and self.thunder_sound:
-            return self.thunder_sound
+        if filename in self.sound_paths:
+            return self.sound_paths[filename]
 
         try:
             data = pkgutil.get_data('terminal_rain_lightning_assets', f'sounds/{filename}')
@@ -161,15 +216,28 @@ class SoundManager:
         with open(path, 'wb') as sound_file:
             sound_file.write(data)
 
-        if filename == 'rain.wav':
-            self.rain_sound = path
-        elif filename == 'thunder.wav':
-            self.thunder_sound = path
+        self.sound_paths[filename] = path
         return path
 
+    def _choose_thunder_sound(self):
+        choices = [
+            sound_file
+            for sound_file in THUNDER_SOUND_FILES
+            if sound_file not in self.recent_thunder_sounds
+        ]
+        if not choices:
+            choices = THUNDER_SOUND_FILES
+        return random.choice(choices)
+
+    def _volume(self, sound_type):
+        return VOLUME_PRESETS[self.volume_preset][sound_type]
+
     def _cleanup_finished_thunder(self):
-        if self.thunder_process and self.thunder_process.poll() is not None:
-            self.thunder_process = None
+        self.thunder_processes = [
+            thunder_process
+            for thunder_process in self.thunder_processes
+            if thunder_process.poll() is None
+        ]
 
     def _terminate(self, process):
         if not process or process.poll() is not None:
@@ -356,7 +424,7 @@ def setup_colors(rain_color_str='cyan', lightning_color_str='yellow'):
         LIGHTNING_COLOR_ATTR = curses.color_pair(COLOR_PAIR_LIGHTNING) | curses.A_BOLD
         return False
 
-def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', start_with_thunderstorm=False, sound_manager=None):
+def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', start_with_thunderstorm=False, start_speed='fast', sound_manager=None):
     """Main curses visualization loop for rain simulation."""
     curses.curs_set(0) # Hide cursor
     stdscr.nodelay(True) # Non-blocking input
@@ -367,7 +435,7 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', s
     active_bolts = [] # List of active LightningBolt objects
     rows, cols = stdscr.getmaxyx()
     is_thunderstorm = start_with_thunderstorm
-    is_slow_motion = False
+    speed_mode_index = SPEED_MODE_NAMES.index(start_speed) if start_speed in SPEED_MODE_NAMES else 0
     if sound_manager:
         sound_manager.start()
 
@@ -387,21 +455,26 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', s
             is_thunderstorm = not is_thunderstorm
             stdscr.clear()
         elif key == ord('s') or key == ord('S'):
-            is_slow_motion = not is_slow_motion
+            speed_mode_index = (speed_mode_index + 1) % len(SPEED_MODES)
             stdscr.clear()
         elif key == ord('m') or key == ord('M'):
             if sound_manager:
                 sound_manager.toggle()
+        elif key == ord('v') or key == ord('V'):
+            if sound_manager:
+                sound_manager.cycle_volume()
 
         # --- Frame Rate Control --- #
         current_time = time.time()
         delta_time = current_time - last_update_time
-        update_interval = SLOW_MOTION_INTERVAL if is_slow_motion else UPDATE_INTERVAL
+        update_interval = SPEED_MODES[speed_mode_index][1]
         if delta_time < update_interval:
              time.sleep(update_interval - delta_time)
         last_update_time = time.time() # Use the time *after* sleep for age calcs
 
         # --- Update --- #
+        if sound_manager:
+            sound_manager.update()
 
         # 1. Lightning Bolts
         next_bolts = []
@@ -410,7 +483,7 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', s
              start_row = random.randint(0, rows // 5)
              active_bolts.append(LightningBolt(start_row, start_col, rows, cols))
              if sound_manager:
-                 sound_manager.play_thunder()
+                 sound_manager.schedule_thunder()
 
         for bolt in active_bolts:
              if bolt.update(): # update now returns True if bolt should *keep* existing
@@ -492,9 +565,23 @@ def main():
         help="Start the program in thunderstorm mode"
     )
     parser.add_argument(
+        '--speed',
+        type=str,
+        default='fast',
+        choices=SPEED_MODE_NAMES,
+        help=f"Starting animation speed. Default: fast. Choices: {', '.join(SPEED_MODE_NAMES)}"
+    )
+    parser.add_argument(
         '--sound',
         action='store_true',
         help="Enable rain and thunder sounds. Requires ffplay from ffmpeg."
+    )
+    parser.add_argument(
+        '--volume',
+        type=str,
+        default='normal',
+        choices=VOLUME_PRESET_NAMES,
+        help=f"Rain and thunder volume preset. Default: normal. Choices: {', '.join(VOLUME_PRESET_NAMES)}"
     )
     args = parser.parse_args()
     # ------------------------ #
@@ -503,12 +590,12 @@ def main():
         print("Error: This script requires a TTY with curses support.")
         return
 
-    sound_manager = SoundManager(enabled=args.sound)
+    sound_manager = SoundManager(enabled=args.sound, volume_preset=args.volume)
     atexit.register(sound_manager.close)
 
     try:
         # Pass parsed colors to the main simulation function
-        curses.wrapper(simulate_rain, args.rain_color, args.lightning_color, args.thunder, sound_manager)
+        curses.wrapper(simulate_rain, args.rain_color, args.lightning_color, args.thunder, args.speed, sound_manager)
     except curses.error as e:
         try: curses.endwin()
         except Exception: pass

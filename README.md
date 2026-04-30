@@ -19,8 +19,8 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 *   Smooth ASCII rain effect with varying drop characters.
 *   Toggleable "Thunderstorm" mode for more intense rain and lightning.
 *   Optional startup flag for launching directly into thunderstorm mode.
-*   Slow-motion mode to observe the rain and lightning in detail.
-*   Optional rain and thunder sounds.
+*   Fast, medium, and slow animation speed modes.
+*   Optional rain and varied thunder sounds.
 *   Customizable rain and lightning colors via command-line arguments.
 *   Responsive to terminal resizing (clears and redraws).
 *   Lightweight and runs in most modern terminals.
@@ -98,6 +98,8 @@ On Arch-based systems with an AUR helper:
 yay -S terminal-rain-lightning
 ```
 
+Note: I do not maintain the AUR package, so it may lag behind the latest changes in this repository.
+
 ### Using Nix
 
 From inside a local clone:
@@ -106,6 +108,30 @@ From inside a local clone:
 nix-build
 ./result/bin/terminal-rain
 ```
+
+## Updating
+
+If you installed from GitHub with `pipx`:
+
+```bash
+pipx upgrade terminal-rain-lightning
+```
+
+If you installed from a local clone:
+
+```bash
+cd terminal-rain-lightning
+git pull
+pipx install --force .
+```
+
+If you installed from the Arch AUR, update it through your AUR helper:
+
+```bash
+yay -Syu terminal-rain-lightning
+```
+
+The AUR package is community-maintained and may not always match the latest repository version.
 
 ## Usage
 
@@ -118,8 +144,9 @@ terminal-rain
 ### Controls
 
 *   `t` or `T`: Toggle thunderstorm mode on/off.
-*   `s` or `S`: Toggle slow-motion mode on/off.
+*   `s` or `S`: Cycle animation speed: fast, medium, slow.
 *   `m` or `M`: Toggle sound on/off.
+*   `v` or `V`: Cycle sound volume: quiet, normal, loud.
 *   `q` or `Q` or `Esc`: Quit the animation.
 *   `Ctrl+C`: Also quits the animation.
 *   The animation will adapt if you resize your terminal window.
@@ -133,7 +160,9 @@ terminal-rain [OPTIONS]
 *   `--rain-color COLOR`: Set the color for the rain. Default: `cyan`.
 *   `--lightning-color COLOR`: Set the color for the lightning. Default: `yellow`.
 *   `-t`, `--thunder`: Start in thunderstorm mode.
+*   `--speed {fast,medium,slow}`: Set the starting animation speed. Default: `fast`.
 *   `--sound`: Enable rain and thunder sounds. Requires `ffplay` from FFmpeg.
+*   `--volume {quiet,normal,loud}`: Set the rain and thunder volume preset. Default: `normal`.
 *   `--help`: Show help text and exit.
 
 Available color choices: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`.
@@ -146,6 +175,10 @@ terminal-rain --rain-color blue --lightning-color white
 
 ```bash
 terminal-rain --thunder --sound
+```
+
+```bash
+terminal-rain --thunder --sound --speed medium --volume loud
 ```
 
 ## Troubleshooting
