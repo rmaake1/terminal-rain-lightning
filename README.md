@@ -18,6 +18,7 @@ I'm relatively new to Linux and wanted to make something like this for fun after
 
 *   Smooth ASCII rain effect with varying drop characters.
 *   Toggleable "Thunderstorm" mode for more intense rain and lightning.
+*   Optional startup flag for launching directly into thunderstorm mode.
 *   Slow-motion mode to observe the rain and lightning in detail.
 *   Customizable rain and lightning colors via command-line arguments.
 *   Responsive to terminal resizing (clears and redraws).
@@ -95,6 +96,15 @@ cd terminal-rain-lightning
 pipx install .
 ```
 
+### Using `nix`
+
+From inside a local clone:
+
+```bash
+nix-build
+./result/bin/terminal-rain
+```
+
 ## Usage
 
 Once installed:
@@ -124,6 +134,7 @@ terminal-rain [OPTIONS]
 ## Options:
 * --rain-color COLOR: Set the color for the rain. Default: cyan.
 * --lightning-color COLOR: Set the color for the lightning. Default: yellow.
+* -t, --thunder: Start in thunderstorm mode.
 * --help: Show this help message and exit.
 * Available COLOR choices: black, red, green, yellow, blue, magenta, cyan, white.
 

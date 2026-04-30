@@ -42,3 +42,6 @@ MANIFEST
 
 # Pytest cache
 .pytest_cache/
+
+# Nix build result
+result/

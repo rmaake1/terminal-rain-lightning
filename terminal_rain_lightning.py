@@ -191,10 +191,10 @@ def setup_colors(rain_color_str='cyan', lightning_color_str='yellow'):
     global LIGHTNING_COLOR_ATTR
     if curses.has_colors():
         curses.start_color()
-        if curses.can_change_color():
+        try:
              curses.use_default_colors()
              bg = -1
-        else:
+        except curses.error:
              bg = curses.COLOR_BLACK # Fallback background
 
         # --- Get curses color constants from strings --- #
@@ -224,17 +224,17 @@ def setup_colors(rain_color_str='cyan', lightning_color_str='yellow'):
         LIGHTNING_COLOR_ATTR = curses.color_pair(COLOR_PAIR_LIGHTNING) | curses.A_BOLD
         return False
 
-def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
+def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', start_with_thunderstorm=False):
     """Main curses visualization loop for rain simulation."""
     curses.curs_set(0) # Hide cursor
     stdscr.nodelay(True) # Non-blocking input
     stdscr.timeout(1) # ms, minimal timeout
 
-    has_colors = setup_colors(rain_color_str, lightning_color_str)
+    setup_colors(rain_color_str, lightning_color_str)
     raindrops = []
     active_bolts = [] # List of active LightningBolt objects
     rows, cols = stdscr.getmaxyx()
-    is_thunderstorm = False
+    is_thunderstorm = start_with_thunderstorm
     is_slow_motion = False
 
     last_update_time = time.time()
@@ -268,7 +268,7 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
 
         # 1. Lightning Bolts
         next_bolts = []
-        if is_thunderstorm and len(active_bolts) < 3 and random.random() < LIGHTNING_CHANCE:
+        if rows >= 4 and is_thunderstorm and len(active_bolts) < 3 and random.random() < LIGHTNING_CHANCE:
              start_col = random.randint(cols // 4, 3 * cols // 4)
              start_row = random.randint(0, rows // 5)
              active_bolts.append(LightningBolt(start_row, start_col, rows, cols))
@@ -330,10 +330,6 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow'):
 
 
 def main():
-    if not os.isatty(1) or os.environ.get('TERM') == 'dumb':
-        print("Error: This script requires a TTY with curses support.")
-        return
-
     # --- Argument Parsing --- #
     parser = argparse.ArgumentParser(description="Simulates rain and thunderstorms in the terminal.")
     valid_colors = list(CURSES_COLOR_MAP.keys())
@@ -351,12 +347,21 @@ def main():
         choices=valid_colors,
         help=f"Color for the lightning. Default: yellow. Choices: {', '.join(valid_colors)}"
     )
+    parser.add_argument(
+        '-t', '--thunder',
+        action='store_true',
+        help="Start the program in thunderstorm mode"
+    )
     args = parser.parse_args()
     # ------------------------ #
 
+    if not os.isatty(1) or os.environ.get('TERM') == 'dumb':
+        print("Error: This script requires a TTY with curses support.")
+        return
+
     try:
         # Pass parsed colors to the main simulation function
-        curses.wrapper(simulate_rain, args.rain_color, args.lightning_color)
+        curses.wrapper(simulate_rain, args.rain_color, args.lightning_color, args.thunder)
     except curses.error as e:
         try: curses.endwin()
         except Exception: pass
