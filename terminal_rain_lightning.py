@@ -173,6 +173,20 @@ class SoundManager:
             self.recent_thunder_sounds.append(thunder_filename)
             self.recent_thunder_sounds = self.recent_thunder_sounds[-2:]
 
+    def pause(self):
+        """Stop all audio immediately without changing the enabled state."""
+        self.pending_thunder_time = None
+        self._terminate(self.rain_process)
+        self.rain_process = None
+        for thunder_process in self.thunder_processes:
+            self._terminate(thunder_process)
+        self.thunder_processes = []
+
+    def resume(self):
+        """Restart audio after a pause, respecting the current enabled state."""
+        if self.enabled:
+            self.start_rain()
+
     def stop(self):
         self.pending_thunder_time = None
         self._terminate(self.rain_process)
@@ -269,6 +283,11 @@ class LightningBolt:
         self.max_y = max_y # Store for boundary checks
         self.max_x = max_x # Store for boundary checks
         # self.age_offset = 0 # Removed
+
+    def shift_timestamps(self, delta):
+        """Offset all segment creation times by delta seconds (used after a pause)."""
+        self.segments = [(y, x, t + delta) for y, x, t in self.segments]
+        self.last_growth_time += delta
 
     def update(self):
         """Updates bolt growth and checks if it should be removed."""
@@ -440,6 +459,8 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', s
         sound_manager.start()
 
     last_update_time = time.time()
+    is_paused = False
+    pause_start_time = None
 
     while True:
         # --- Input --- #
@@ -451,6 +472,21 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', s
              active_bolts.clear()
         elif key == ord('q') or key == ord('Q') or key == 27:
             break
+        elif key == ord('p') or key == ord('P'):
+            is_paused = not is_paused
+            if is_paused:
+                pause_start_time = time.time()
+                if sound_manager:
+                    sound_manager.pause()
+            else:
+                # Shift bolt timestamps forward by the paused duration so
+                # segments don't instantly expire when we resume.
+                paused_duration = time.time() - pause_start_time
+                for bolt in active_bolts:
+                    bolt.shift_timestamps(paused_duration)
+                last_update_time = time.time()
+                if sound_manager:
+                    sound_manager.resume()
         elif key == ord('t') or key == ord('T'):
             is_thunderstorm = not is_thunderstorm
             stdscr.clear()
@@ -463,6 +499,11 @@ def simulate_rain(stdscr, rain_color_str='cyan', lightning_color_str='yellow', s
         elif key == ord('v') or key == ord('V'):
             if sound_manager:
                 sound_manager.cycle_volume()
+
+        # --- Paused: hold the current frame, avoid CPU spin --- #
+        if is_paused:
+            time.sleep(0.05)
+            continue
 
         # --- Frame Rate Control --- #
         current_time = time.time()
